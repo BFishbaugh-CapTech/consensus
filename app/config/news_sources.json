@@ -1,0 +1,14 @@
+[
+  {
+    "name": "NPR",
+    "rss_url": "https://feeds.npr.org/1001/rss.xml"
+  },
+  {
+    "name": "BBC World",
+    "rss_url": "https://feeds.bbci.co.uk/news/world/rss.xml"
+  },
+  {
+    "name": "CBS News",
+    "rss_url": "https://www.cbsnews.com/latest/rss/main"
+  }
+]
