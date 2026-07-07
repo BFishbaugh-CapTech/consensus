@@ -26,5 +26,17 @@
     {
         "name": "Fox News",
         "rss_url": "https://moxie.foxnews.com/google-publisher/latest.xml"
+    },
+    {
+        "name": "Reuters",
+        "rss_url": "https://feeds.reuters.com/reuters/topNews"
+    },
+    {
+        "name": "Associated Press",
+        "rss_url": "https://rss.ap.org/apf-topnews"
+    },
+    {
+        "name": "Al Jazeera",
+        "rss_url": "https://www.aljazeera.com/xml/rss/all.xml"
     }
 ]
