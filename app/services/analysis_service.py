@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +22,6 @@ class AnalysisService:
     ) -> None:
         self.analyzer = analyzer
 
-
     def analyze_articles(
         self,
         articles: list[Article],
@@ -34,70 +32,32 @@ class AnalysisService:
 
         analyses: list[Analysis] = []
 
-        total = len(articles)
-
         logger.info(
             "Beginning analysis of %d articles.",
-            total,
+            len(articles),
         )
 
-        start_time = time.perf_counter()
-
-        for index, article in enumerate(
-            articles,
-            start=1,
-        ):
-            article_start = time.perf_counter()
-
+        for article in articles:
             try:
-                logger.info(
-                    "[%d/%d] Analyzing (%s): %s",
-                    index,
-                    total,
-                    article.source,
-                    article.title,
-                )
-
                 analysis = self.analyzer.analyze(article)
 
                 analyses.append(analysis)
 
-                article_time = (
-                    time.perf_counter() - article_start
-                )
-
-                elapsed = (
-                    time.perf_counter() - start_time
-                )
-
-                average = elapsed / index
-                remaining = average * (total - index)
-
                 logger.info(
-                    "[%d/%d] Complete (%.2fs) | ETA %.0fs",
-                    index,
-                    total,
-                    article_time,
-                    remaining,
+                    "Analyzed article: %s",
+                    article.title,
                 )
 
             except Exception:
                 logger.exception(
-                    "[%d/%d] Failed to analyze article %s",
-                    index,
-                    total,
+                    "Failed to analyze article %s",
                     article.id,
                 )
 
         logger.info(
             "Successfully analyzed %d of %d articles.",
             len(analyses),
-            total,
-        )
-
-        logger.info(
-            "Analysis completed in %.2f seconds.",
-            time.perf_counter() - start_time,
+            len(articles),
         )
 
         return analyses
