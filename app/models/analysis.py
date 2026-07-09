@@ -8,11 +8,16 @@ class Analysis:
     AI-generated analysis of a single news article.
     """
 
-    # Relationships
+    # Relationship
     article_id: str
     story_id: Optional[str] = None
 
-    # Topic Classification
+    # AI Normalization
+    headline: str = ""
+    primary_event: str = ""
+    summary: str = ""
+
+    # Classification
     topics: list[str] = field(default_factory=list)
 
     # Named Entities
@@ -24,11 +29,11 @@ class Analysis:
     political_lean: Optional[str] = None
     bias_score: Optional[float] = None
 
-    # Writing Style
+    # Style
     emotional_tone: Optional[str] = None
 
     # AI Confidence
     confidence: Optional[float] = None
 
-    # AI Reasoning
+    # Explanation
     reasoning: Optional[str] = None

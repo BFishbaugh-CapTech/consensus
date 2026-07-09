@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from app.ai.exceptions import LLMClientError
+from app.exceptions.exceptions import LLMClientError
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +21,13 @@ class LLMClient:
 
     def __init__(
         self,
+        api_key: str | None = None,
         model: str | None = None,
     ) -> None:
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
 
         if not api_key:
-            raise ValueError(
+            raise RuntimeError(
                 "OPENAI_API_KEY was not found. "
                 "Check your .env file."
             )
@@ -53,7 +54,7 @@ class LLMClient:
         """
 
         logger.info(
-            "Sending prompt to model '%s'.",
+            "Generating response using model '%s'.",
             self.model,
         )
 
@@ -64,16 +65,30 @@ class LLMClient:
 
         try:
             response = self.client.responses.create(
-                model=self.model,
-                input=prompt,
+                **self._build_request(prompt)
             )
+
+            text = response.output_text.strip()
+
+            if not text:
+                raise LLMClientError(
+                    "LLM returned an empty response."
+                )
 
             logger.info(
                 "Successfully received response from '%s'.",
                 self.model,
             )
 
-            return response.output_text.strip()
+            logger.debug(
+                "Response length: %d characters",
+                len(text),
+            )
+
+            return text
+
+        except LLMClientError:
+            raise
 
         except Exception as ex:
             logger.exception(
@@ -83,3 +98,32 @@ class LLMClient:
             raise LLMClientError(
                 "Unable to generate response."
             ) from ex
+
+    def _build_request(
+        self,
+        prompt: str,
+    ) -> dict:
+        """
+        Build the request sent to the OpenAI Responses API.
+        """
+
+        return {
+            "model": self.model,
+            "input": prompt,
+
+            # -----------------------------------------------------------------
+            # Future configuration options
+            #
+            # Uncomment or expand these as the project evolves.
+            # -----------------------------------------------------------------
+
+            # "temperature": 0.2,
+            # "max_output_tokens": 2000,
+
+            # Force JSON output (supported models / APIs)
+            # "text": {
+            #     "format": {
+            #         "type": "json_object",
+            #     }
+            # },
+        }

@@ -1,2 +1,10 @@
 class LLMClientError(Exception):
-    """Raised when the LLM client fails to generate a response."""
+    """Raised when communication with the LLM fails."""
+
+
+class PromptGenerationError(Exception):
+    """Raised when a prompt cannot be generated."""
+
+
+class AnalysisParseError(Exception):
+    """Raised when an LLM response cannot be parsed."""
