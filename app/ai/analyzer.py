@@ -36,10 +36,17 @@ class Analyzer:
 
             response = self.client.generate(prompt)
 
-            return self._parse_response(
+            analysis = self._parse_response(
                 article.id,
                 response,
             )
+
+            logger.info(
+                "Successfully analyzed article %s",
+                article.id,
+            )
+
+            return analysis
 
         except LLMClientError:
             logger.exception(
@@ -73,8 +80,6 @@ class Analyzer:
 {self._analysis_instructions()}
 
 {self._json_schema()}
-
-{self._example_response()}
 
 {self._article(article)}
 """.strip()
@@ -165,7 +170,16 @@ Produce the following information:
         """
 
         return """
-The JSON response MUST exactly match this schema.
+Return ONLY a valid JSON object.
+
+The JSON object MUST:
+
+- Match this schema exactly.
+- Include every property.
+- Never include markdown.
+- Never include comments.
+- Never include additional properties.
+- Use null when a value cannot be determined.
 
 {
     "headline": "",
@@ -181,45 +195,6 @@ The JSON response MUST exactly match this schema.
     "confidence": 0.0,
     "reasoning": ""
 }
-
-Do not omit fields.
-
-Use null if a value cannot be determined.
-
-Do not include additional properties.
-""".strip()
-
-    def _example_response(self) -> str:
-        """
-        Example JSON response.
-        """
-
-        return """
-Example:
-
-{
-    "headline": "Congress Passes Budget Bill",
-    "primary_event": "Congress approves a federal budget bill.",
-    "topics": [
-        "Politics",
-        "Government"
-    ],
-    "people": [
-        "Jane Doe"
-    ],
-    "organizations": [
-        "United States Congress"
-    ],
-    "locations": [
-        "United States"
-    ],
-    "summary": "Congress passed a federal budget bill after several weeks of negotiations between lawmakers. The legislation includes funding for government operations and several policy initiatives. Supporters argued that the bill provides economic stability, while opponents criticized portions of the spending package. The article presents the timeline of negotiations, reactions from elected officials, and expected next steps before implementation.",
-    "political_lean": "Center",
-    "bias_score": 0.03,
-    "emotional_tone": "Neutral",
-    "confidence": 0.96,
-    "reasoning": "The article presents multiple viewpoints and uses predominantly factual language with limited emotionally charged wording."
-}
 """.strip()
 
     def _article(
@@ -229,6 +204,10 @@ Example:
         """
         Format the article for the prompt.
         """
+
+        summary = article.summary or "Not provided."
+
+        content = article.content or "Not provided."
 
         return f"""
 ARTICLE
@@ -240,10 +219,10 @@ Source:
 {article.source}
 
 Summary:
-{article.summary}
+{summary}
 
 Content:
-{article.content}
+{content}
 """.strip()
 
     # ------------------------------------------------------------------
@@ -267,6 +246,39 @@ Content:
                 "LLM returned invalid JSON."
             ) from ex
 
+        required_lists = (
+            "topics",
+            "people",
+            "organizations",
+            "locations",
+        )
+
+        for field in required_lists:
+            if not isinstance(data.get(field), list):
+                raise LLMClientError(
+                    f"'{field}' must be a list."
+                )
+
+        bias_score = data.get("bias_score")
+
+        if (
+            bias_score is not None
+            and not -1.0 <= bias_score <= 1.0
+        ):
+            raise LLMClientError(
+                "bias_score must be between -1.0 and 1.0."
+            )
+
+        confidence = data.get("confidence")
+
+        if (
+            confidence is not None
+            and not 0.0 <= confidence <= 1.0
+        ):
+            raise LLMClientError(
+                "confidence must be between 0.0 and 1.0."
+            )
+
         try:
             return Analysis(
                 article_id=article_id,
@@ -278,9 +290,9 @@ Content:
                 locations=data["locations"],
                 summary=data["summary"],
                 political_lean=data.get("political_lean"),
-                bias_score=data.get("bias_score"),
+                bias_score=bias_score,
                 emotional_tone=data.get("emotional_tone"),
-                confidence=data.get("confidence"),
+                confidence=confidence,
                 reasoning=data.get("reasoning"),
             )
 
