@@ -1,6 +1,6 @@
 [
     {
-        "name": "Fox News",
-        "rss_url": "https://moxie.foxnews.com/google-publisher/latest.xml"
+        "name": "CNN",
+        "rss_url": "http://rss.cnn.com/rss/cnn_topstories.rss"
     }
 ]

@@ -1,0 +1,161 @@
+/* ---------------------------------------------------- */
+/* Global Layout                                        */
+/* ---------------------------------------------------- */
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fa;
+    color: #222;
+}
+
+.app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+
+/* ---------------------------------------------------- */
+/* Header                                               */
+/* ---------------------------------------------------- */
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    margin-bottom: 0.25rem;
+    font-size: 3rem;
+    color: #1f4f82;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.description {
+    max-width: 800px;
+    margin: auto;
+    color: #555;
+    line-height: 1.6;
+}
+
+
+/* ---------------------------------------------------- */
+/* Stats                                                */
+/* ---------------------------------------------------- */
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    color: #1f4f82;
+}
+
+.stat-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+
+/* ---------------------------------------------------- */
+/* Analysis Cards                                       */
+/* ---------------------------------------------------- */
+
+.analysis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+
+/* ---------------------------------------------------- */
+/* Loading Spinner                                      */
+/* ---------------------------------------------------- */
+
+.loading-container {
+    text-align: center;
+    margin-top: 120px;
+}
+
+.loading-container h2 {
+    margin-top: 1.5rem;
+}
+
+.spinner {
+    width: 70px;
+    height: 70px;
+    margin: auto;
+
+    border: 8px solid #ddd;
+    border-top: 8px solid #1f4f82;
+
+    border-radius: 50%;
+
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+/* ---------------------------------------------------- */
+/* Errors                                               */
+/* ---------------------------------------------------- */
+
+.error {
+    background: white;
+    border-left: 6px solid crimson;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+}
+
+.error h2 {
+    margin-top: 0;
+    color: crimson;
+}
+
+
+/* ---------------------------------------------------- */
+/* Responsive                                           */
+/* ---------------------------------------------------- */
+
+@media (max-width: 768px) {
+
+    .stats {
+        flex-direction: column;
+    }
+
+    .app {
+        padding: 1rem;
+    }
+
+}
