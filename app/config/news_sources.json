@@ -1,6 +1,6 @@
 [
     {
-        "name": "NPR",
-        "rss_url": "https://feeds.npr.org/1001/rss.xml"
+        "name": "Fox News",
+        "rss_url": "https://moxie.foxnews.com/google-publisher/latest.xml"
     }
 ]

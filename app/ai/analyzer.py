@@ -2,7 +2,7 @@ import json
 import logging
 
 from app.ai.llm_client import LLMClient
-from app.exceptions.exceptions import LLMClientError
+from app.ai.exceptions import LLMClientError
 from app.models.analysis import Analysis
 from app.models.article import Article
 
@@ -184,16 +184,24 @@ The JSON object MUST:
 {
     "headline": "",
     "primary_event": "",
-    "topics": [],
-    "people": [],
-    "organizations": [],
-    "locations": [],
-    "summary": "",
-    "political_lean": "",
+    "topics": [
+        "Example Topic"
+    ],
+    "people": [
+        "Example People"
+    ],
+    "organizations": [
+        "Example Organization"
+    ],
+    "locations": [
+        "Example Location"
+    ],
+    "summary": "Example Summary",
+    "political_lean": "Center",
     "bias_score": 0.0,
-    "emotional_tone": "",
+    "emotional_tone": "Neutral",
     "confidence": 0.0,
-    "reasoning": ""
+    "reasoning": "Example Reasoning"
 }
 """.strip()
 
@@ -225,6 +233,34 @@ Content:
 {content}
 """.strip()
 
+    def _normalize_list(
+        self,
+        value,
+    ) -> list[str]:
+        """
+        Normalize an LLM value into a list of strings.
+        """
+
+        if value is None:
+            return []
+
+        if isinstance(value, list):
+            return [
+                str(item).strip()
+                for item in value
+                if str(item).strip()
+            ]
+
+        if isinstance(value, str):
+            value = value.strip()
+
+            if not value:
+                return []
+
+            return [value]
+
+        return [str(value)]
+
     # ------------------------------------------------------------------
     # Response Parsing
     # ------------------------------------------------------------------
@@ -238,6 +274,8 @@ Content:
         Convert the LLM response into an Analysis object.
         """
 
+        logger.debug("Raw LLM Response:\n%s", response)
+
         try:
             data = json.loads(response)
 
@@ -246,20 +284,47 @@ Content:
                 "LLM returned invalid JSON."
             ) from ex
 
-        required_lists = (
-            "topics",
-            "people",
-            "organizations",
-            "locations",
+        topics = sorted(
+            set(
+                self._normalize_list(
+                    data.get("topics")
+                )
+            )
         )
 
-        for field in required_lists:
-            if not isinstance(data.get(field), list):
-                raise LLMClientError(
-                    f"'{field}' must be a list."
+        people = sorted(
+            set(
+                self._normalize_list(
+                    data.get("people")
                 )
+            )
+        )
+
+        organizations = sorted(
+            set(
+                self._normalize_list(
+                    data.get("organizations")
+                )
+            )
+        )
+
+        locations = sorted(
+            set(
+                self._normalize_list(
+                    data.get("locations")
+                )
+            )
+        )
 
         bias_score = data.get("bias_score")
+
+        if (
+            bias_score is not None
+            and not isinstance(bias_score, (int, float))
+        ):
+            raise LLMClientError(
+                "bias_score must be numeric."
+            )
 
         if (
             bias_score is not None
@@ -273,25 +338,43 @@ Content:
 
         if (
             confidence is not None
+            and not isinstance(confidence, (int, float))
+        ):
+            raise LLMClientError(
+                "confidence must be numeric."
+            )
+
+        if (
+            confidence is not None
             and not 0.0 <= confidence <= 1.0
         ):
             raise LLMClientError(
                 "confidence must be between 0.0 and 1.0."
             )
 
+        political_lean = data.get("political_lean")
+
+        if political_lean:
+            political_lean = political_lean.title()
+
+        emotional_tone = data.get("emotional_tone")
+
+        if emotional_tone:
+            emotional_tone = emotional_tone.title()
+
         try:
             return Analysis(
                 article_id=article_id,
                 headline=data["headline"],
                 primary_event=data["primary_event"],
-                topics=data["topics"],
-                people=data["people"],
-                organizations=data["organizations"],
-                locations=data["locations"],
                 summary=data["summary"],
-                political_lean=data.get("political_lean"),
+                topics=topics,
+                people=people,
+                organizations=organizations,
+                locations=locations,
+                political_lean=political_lean,
                 bias_score=bias_score,
-                emotional_tone=data.get("emotional_tone"),
+                emotional_tone=emotional_tone,
                 confidence=confidence,
                 reasoning=data.get("reasoning"),
             )

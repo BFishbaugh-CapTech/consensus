@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from app.exceptions.exceptions import LLMClientError
+from app.ai.exceptions import LLMClientError
 
 logger = logging.getLogger(__name__)
 

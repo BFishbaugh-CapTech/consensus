@@ -62,54 +62,17 @@ class AnalysisService:
 
         return analyses
 
-    def load_articles(
-        self,
-        input_path: str,
-    ) -> list[Article]:
-        """
-        Load Article objects from a JSON file.
-        """
-
-        with open(input_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-        articles = [
-            Article(
-                id=item["id"],
-                title=item["title"],
-                url=item["url"],
-                published_at=(
-                    datetime.fromisoformat(item["published_at"])
-                    if item["published_at"]
-                    else None
-                ),
-                retrieved_at=datetime.fromisoformat(
-                    item["retrieved_at"]
-                ),
-                source=item["source"],
-                author=item["author"],
-                content=item["content"],
-                summary=item["summary"],
-            )
-            for item in data
-        ]
-
-        logger.info(
-            "Loaded %d articles from %s",
-            len(articles),
-            input_path,
-        )
-
-        return articles
-
     def export_analysis_to_json(
         self,
         analyses: list[Analysis],
-        output_path: str,
+        output_path: str | None = None,
     ) -> None:
         """
         Export Analysis objects to JSON.
         """
+
+        if output_path is None:
+            output_path = self._default_output_path()
 
         output = Path(output_path)
 
@@ -124,13 +87,37 @@ class AnalysisService:
             encoding="utf-8",
         ) as file:
             json.dump(
-                [asdict(a) for a in analyses],
+                [asdict(analysis) for analysis in analyses],
                 file,
                 indent=4,
+                default=str,
             )
 
         logger.info(
             "Exported %d analyses to %s",
             len(analyses),
             output,
+        )
+
+    def _default_output_path(
+        self,
+    ) -> str:
+        """
+        Generate the default output filename.
+        """
+
+        now = datetime.now()
+
+        if now.hour < 12:
+            period = "Morning"
+        elif now.hour < 17:
+            period = "Afternoon"
+        else:
+            period = "Evening"
+
+        return (
+            f"data/"
+            f"{now:%Y_%m_%d}_"
+            f"{period}"
+            f"Analysis.json"
         )
