@@ -9,6 +9,7 @@ import feedparser
 
 from app.models.article import Article
 from email.utils import parsedate_to_datetime
+from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,11 @@ class RSSService:
 
         sources = self._load_sources()
 
-        logger.info("LOADED %d NEWS SOURCES: ", len(sources))
+        logger.info(
+            "LOADED %d NEWS SOURCES (MAX %d ARTICLES EACH):",
+            len(sources),
+            settings.MAX_ARTICLES_PER_SOURCE,
+        )
 
         for source in sources:
             try:
@@ -36,18 +41,11 @@ class RSSService:
 
                 articles.extend(source_articles)
 
-                if len(source_articles) == 0:
-                    logger.warning(
-                        "%-22s %3d articles",
-                        source["name"],
-                        0,
-                    )
-                else:
-                    logger.info(
-                        "%-22s %3d articles",
-                        source["name"],
-                        len(source_articles),
-                    )
+                logger.info(
+                    "%-22s %3d articles",
+                    source["name"],
+                    len(source_articles),
+                )
 
             except Exception:
                 logger.exception(
@@ -72,22 +70,36 @@ class RSSService:
         """
 
         feed = feedparser.parse(source["rss_url"])
+
         if feed.bozo:
             logger.warning(
                 "%s returned a malformed RSS feed.",
                 source["name"],
             )
+
         if not feed.entries:
             logger.warning(
                 "%s returned no entries.",
                 source["name"],
             )
+            return []
 
         retrieved_at = datetime.now(timezone.utc)
 
-        articles = []
+        entries = feed.entries[
+            : settings.MAX_ARTICLES_PER_SOURCE
+        ]
 
-        for entry in feed.entries:
+        logger.debug(
+            "Processing %d of %d available articles from %s.",
+            len(entries),
+            len(feed.entries),
+            source["name"],
+        )
+
+        articles: list[Article] = []
+
+        for entry in entries:
             try:
                 article = self._populate_article(
                     source,

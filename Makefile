@@ -2,13 +2,19 @@
 # Consensus Makefile
 # ==========================================================
 
-PYTHON := python3
-PIP := pip3
+VENV := .venv
 
-BACKEND_DIR := .
+PYTHON := $(VENV)/bin/python
+PIP := $(PYTHON) -m pip
+PYTEST := $(PYTHON) -m pytest
+BLACK := $(PYTHON) -m black
+RUFF := $(PYTHON) -m ruff
+MYPY := $(PYTHON) -m mypy
+COVERAGE := $(PYTHON) -m coverage
+
+UVICORN := $(PYTHON) -m uvicorn app.main:app --reload
+
 FRONTEND_DIR := frontend
-
-UVICORN := uvicorn app.main:app --reload
 
 
 # ==========================================================
@@ -18,7 +24,7 @@ UVICORN := uvicorn app.main:app --reload
 .PHONY: install
 
 install:
-	@echo "Installing Python dependencies..."
+	@echo "Installing Backend dependencies..."
 	@$(PIP) install -r requirements.txt
 
 	@echo ""
@@ -33,8 +39,8 @@ install:
 .PHONY: format
 
 format:
-	black .
-	ruff check . --fix
+	$(BLACK) .
+	$(RUFF) check . --fix
 
 
 # ==========================================================
@@ -44,8 +50,8 @@ format:
 .PHONY: lint
 
 lint:
-	ruff check .
-	mypy .
+	$(RUFF) check .
+	$(MYPY) .
 
 
 # ==========================================================
@@ -55,25 +61,47 @@ lint:
 .PHONY: test
 
 test:
-	pytest
+	$(PYTEST)
 
 
 .PHONY: coverage
 
 coverage:
-	coverage run -m pytest
-	coverage report
+	$(COVERAGE) run -m pytest
+	$(COVERAGE) report
 
 
 # ==========================================================
-# Individual Services
+# Utility Scripts
 # ==========================================================
+
+.PHONY: rssService
+
+rssService:
+	$(PYTHON) -m scripts.test_rss
+
+
+.PHONY: llm
+
+llm:
+	$(PYTHON) -m scripts.test_llm
+
+
+.PHONY: analysis
+
+analysis:
+	$(PYTHON) -m scripts.test_analysis
+
 
 .PHONY: pipeline
 
 pipeline:
 	$(PYTHON) -m scripts.run_pipeline
 
+
+# ==========================================================
+# Servers
+# ==========================================================
 
 .PHONY: backend
 
@@ -91,32 +119,25 @@ frontend:
 # Demo
 # ==========================================================
 
+.PHONY: run
+run: demo
+
+
 .PHONY: demo
 
-demo:
-	@echo "==========================================="
-	@echo " Activating Virtual Environment..."
-	@echo "==========================================="
-	@. .venv/bin/activate && \
-	echo "Using Python: $$(which python)" && \
-	echo "" && \
-	echo "Installing Backend Dependencies..." && \
-	pip install -r requirements.txt && \
-	echo "" && \
-	echo "Running Consensus Pipeline..." && \
-	python -m scripts.run_pipeline
+demo: install
 
 	@echo ""
 	@echo "==========================================="
-	@echo " Installing Frontend..."
+	@echo " Running Consensus Pipeline..."
 	@echo "==========================================="
-	@cd frontend && npm install
+	@$(PYTHON) -m scripts.run_pipeline
 
 	@echo ""
 	@echo "==========================================="
 	@echo " Starting FastAPI..."
 	@echo "==========================================="
-	@nohup .venv/bin/python -m uvicorn app.main:app --reload > backend.log 2>&1 &
+	@nohup $(UVICORN) > backend.log 2>&1 &
 
 	@sleep 3
 
@@ -124,7 +145,7 @@ demo:
 	@echo "==========================================="
 	@echo " Starting React..."
 	@echo "==========================================="
-	@cd frontend && nohup npm run dev > ../frontend.log 2>&1 &
+	@cd $(FRONTEND_DIR) && nohup npm run dev > ../frontend.log 2>&1 &
 
 	@sleep 5
 
@@ -172,16 +193,20 @@ clean:
 help:
 	@echo ""
 	@echo "Consensus Commands"
-	@echo "-------------------------------"
+	@echo "-----------------------------------------"
 	@echo "make install     Install dependencies"
-	@echo "make pipeline    Run analysis pipeline"
+	@echo "make pipeline    Run full pipeline"
+	@echo "make rssService  Run RSS test"
+	@echo "make llm         Run LLM test"
+	@echo "make analysis    Run Analysis test"
 	@echo "make backend     Start FastAPI"
 	@echo "make frontend    Start React"
-	@echo "make demo        Run everything"
+	@echo "make run         Install and launch everything"
+	@echo "make demo        Same as make run"
 	@echo "make test        Run unit tests"
 	@echo "make coverage    Run coverage"
 	@echo "make lint        Run linting"
-	@echo "make format      Format code"
-	@echo "make clean       Remove temporary files"
+	@echo "make format      Format source"
+	@echo "make clean       Remove generated files"
 	@echo "make stop        Stop backend/frontend"
 	@echo ""

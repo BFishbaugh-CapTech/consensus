@@ -1,6 +1,31 @@
 [
     {
+        "name": "NPR",
+        "rss_url": "https://feeds.npr.org/1001/rss.xml"
+    }
+    ,
+    {
+        "name": "BBC World",
+        "rss_url": "https://feeds.bbci.co.uk/news/world/rss.xml"
+    }
+    ,
+    {
+        "name": "CBS News",
+        "rss_url": "https://www.cbsnews.com/latest/rss/main"
+    }
+    ,
+    {
+        "name": "ABC News",
+        "rss_url": "https://abcnews.go.com/abcnews/topstories"
+    }
+    ,
+    {
         "name": "CNN",
         "rss_url": "http://rss.cnn.com/rss/cnn_topstories.rss"
+    }
+    ,
+    {
+        "name": "Fox News",
+        "rss_url": "https://moxie.foxnews.com/google-publisher/latest.xml"
     }
 ]

@@ -36,28 +36,85 @@ class Pipeline:
             self.analyzer,
         )
 
+
     def run(self) -> None:
         """
         Execute the full Consensus pipeline.
         """
 
+        start_time = time.perf_counter()
+
         logger.info("=" * 60)
         logger.info("Starting Consensus Pipeline")
         logger.info("=" * 60)
 
+        # --------------------------------------------------
+        # Step 1 - Fetch Articles
+        # --------------------------------------------------
+
+        logger.info("")
+        logger.info("[1/3] Fetching Articles...")
+
+        step_start = time.perf_counter()
+
         articles = self._fetch_articles()
+
+        logger.info(
+            "Retrieved %d articles in %.2f seconds.",
+            len(articles),
+            time.perf_counter() - step_start,
+        )
+
+        # --------------------------------------------------
+        # Step 2 - Analyze Articles
+        # --------------------------------------------------
+
+        logger.info("")
+        logger.info("[2/3] Analyzing Articles...")
+
+        step_start = time.perf_counter()
 
         analyses = self._analyze_articles(
             articles,
         )
+
+        logger.info(
+            "Generated %d analyses in %.2f seconds.",
+            len(analyses),
+            time.perf_counter() - step_start,
+        )
+
+        # --------------------------------------------------
+        # Step 3 - Export Results
+        # --------------------------------------------------
+
+        logger.info("")
+        logger.info("[3/3] Exporting Results...")
+
+        step_start = time.perf_counter()
 
         self._export_results(
             articles,
             analyses,
         )
 
+        logger.info(
+            "Export complete in %.2f seconds.",
+            time.perf_counter() - step_start,
+        )
+
+        # --------------------------------------------------
+        # Complete
+        # --------------------------------------------------
+
+        logger.info("")
         logger.info("=" * 60)
         logger.info("Consensus Pipeline Complete")
+        logger.info("Processed %d articles.", len(articles))
+        logger.info(
+            "Total Runtime: %.2f seconds",
+            time.perf_counter() - start_time,
+        )
         logger.info("=" * 60)
 
     def _fetch_articles(
